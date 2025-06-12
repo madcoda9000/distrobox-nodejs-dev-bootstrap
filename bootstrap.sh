@@ -76,7 +76,7 @@ case "$ENVIRONMENT_CHOICE" in
     sudo dpkg -i packages-microsoft-prod.deb
     rm packages-microsoft-prod.deb
     sudo apt update -y
-    sudo apt install -y dotnet-sdk-6.0
+    sudo apt install -y dotnet-sdk-8.0
     ;;
   *)
     echo "❌ Invalid environment choice."
