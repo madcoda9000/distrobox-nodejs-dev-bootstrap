@@ -1,3 +1,8 @@
+![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
+![Shell Script](https://img.shields.io/badge/script-bash-blue)
+![Platform](https://img.shields.io/badge/platform-linux-green)
+
+
 # 📦 Distrobox Node.js Dev Bootstrap
 
 Ein automatisiertes Setup-Skript, das eine vollständige Node.js-Entwicklungsumgebung in einem isolierten [Distrobox](https://github.com/89luca89/distrobox)-Container auf Basis von `ubuntu:22.04` einrichtet.
