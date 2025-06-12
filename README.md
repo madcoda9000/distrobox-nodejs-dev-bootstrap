@@ -1,50 +1,100 @@
-# Distrobox Development Environment Bootstrap
+![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
+![Shell Script](https://img.shields.io/badge/script-bash-blue)
+![Platform](https://img.shields.io/badge/platform-linux-green)
 
-This script helps you quickly set up a development environment inside a distrobox container. You can choose between Node.js, PHP, or .NET development setups. Optionally, you can provide a GitHub project URL to clone, or just create the project folder without cloning.
+# 📦 Distrobox Dev Bootstrap
 
-## Features
+Ein interaktives Setup-Skript, das eine vollständige Entwicklungsumgebung in einem isolierten [Distrobox](https://github.com/89luca89/distrobox)-Container auf Basis von `ubuntu:22.04` einrichtet – für Node.js, PHP oder .NET.
 
-- Installs podman and distrobox if needed
-- Creates a distrobox container with Ubuntu 22.04
-- Supports Node.js, PHP, and .NET development environments
-- Optional Git project cloning
-- Adds a convenient alias to enter the container
+---
 
-## Usage
+## ✨ Features
 
-Run the script and follow the prompts:
+- 🐧 Erstellt eine isolierte Linux-Entwicklungsumgebung mit `distrobox`
+- 🔐 Optionaler Klon eines öffentlichen oder privaten GitHub-Repos (PAT wird unterstützt)
+- 🔧 Auswahl der Entwicklungsumgebung: Node.js, PHP oder .NET SDK
+- ⚙️ Automatisierte Installation aller Tools und Abhängigkeiten
+- 🚀 Alias für einfachen Zugang zum Container
+- 🧼 Temporäre Dateien werden nach Setup entfernt
 
-```bash
-./setup-dev-env.sh
-```
+---
 
-### Prompts
+## ⚙️ Voraussetzungen
 
-- GitHub PAT (Personal Access Token) — required if cloning a private repo
-- Container name
-- Development environment choice:
-  - Node.js
-  - PHP
-  - .NET
-- Git project URL (optional)
-- Relative path inside your home directory where the project will be cloned or created
+- Linux-System mit Bash
+- `apt`-Paketmanager (Ubuntu, Debian)
+- Internetverbindung
+- Optional: GitHub Personal Access Token (PAT), wenn du ein privates Repo klonen willst
 
-If no Git URL is provided, only the folder structure is created inside the container.
+---
 
-## Example
+## 🚀 Schnellstart
 
 ```bash
-./setup-dev-env.sh
+curl -s https://raw.githubusercontent.com/madcoda9000/distrobox-nodejs-dev-bootstrap/main/bootstrap.sh | bash
 ```
 
-## Alias
-
-After setup, you can enter the container with the alias:
+## 💡 Alternativ lokal ausführen:
 
 ```bash
-enter_<container_name>
+git clone https://github.com/madcoda9000/distrobox-nodejs-dev-bootstrap.git
+cd distrobox-nodejs-dev-bootstrap
+chmod +x bootstrap.sh
+./bootstrap.sh
 ```
 
-## Script Source
+## 🖥️ Was passiert im Skript?
 
-https://github.com/madcoda9000/distrobox-nodejs-dev-bootstrap
+1. 🔧 Installiert podman, git, curl, distrobox (sofern nicht vorhanden)
+
+2. 🐳 Erstellt einen Container auf Basis von ubuntu:22.04
+
+3. 📂 Erstellt den gewünschten Projektordner und klont optional ein Git-Repository
+
+4. 🧰 Installiert je nach Wahl:
+
+    Node.js (LTS) + npm
+
+    PHP (CLI, mbstring, xml)
+
+    .NET SDK (6.0)
+
+5. 🔗 Legt einen Alias an wie z. B.:
+
+```bash
+alias enter_meinprojekt='distrobox enter meinprojekt'
+```
+
+## 📋 Beispiel-Dialog
+
+```bash
+🔐 Enter your GitHub PAT (press Enter to skip): •••••••••
+📦 Enter a name for your container: meinprojekt
+🛠️ Choose your development environment:
+1) Node.js
+2) PHP
+3) .NET
+Your choice (1/2/3): 1
+🌐 Git project URL (optional): https://github.com/username/my-app.git
+📁 Relative path (inside your home) to create project: Projekte/WebApps
+```
+Danach kannst du deinen Container mit folgendem Befehl betreten:
+
+```bash
+enter_meinprojekt
+```
+
+## 📁 Ordnerstruktur
+Dein Projekt befindet sich nach der Installation z. B. hier:
+```bash
+~/Projekte/WebApps/my-app
+```
+
+## 🧯 Container löschen
+
+```bash
+distrobox rm meinprojekt
+```
+
+## 📜 Lizenz
+MIT License – © madcoda9000
