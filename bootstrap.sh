@@ -2,34 +2,41 @@
 
 set -e
 
-read -rsp "🔐 Enter your GitHub PAT (personal access token): " GITHUB_TOKEN
+read -rsp "🔐 Enter your GitHub PAT (press Enter to skip): " GITHUB_TOKEN
 echo
 read -rp "📦 Enter a name for your container: " CONTAINER_NAME
 echo
-read -rp "🌐 Please enter Git project URL (e.g. https://github.com/user/repo.git): " GIT_URL
+
+echo "🛠️ Choose your development environment:"
+echo "1) Node.js"
+echo "2) PHP"
+echo "3) .NET"
+read -rp "Your choice (1/2/3): " ENVIRONMENT_CHOICE
 echo
-read -rp "📁 Relative path (inside your home) to clone project (e.g. Projects/MyApp): " TARGET_FOLDER_REL
+
+read -rp "🌐 Git project URL (optional, e.g. https://github.com/user/repo.git): " GIT_URL
+echo
+read -rp "📁 Relative path (inside your home) to create project (e.g. Projects/MyApp): " TARGET_FOLDER_REL
 echo
 
 # 🔄 Absolute Zielpfad bauen
 TARGET_FOLDER="$HOME/$TARGET_FOLDER_REL"
 
 # 📁 Projektverzeichnisname extrahieren
-REPO_NAME=$(basename -s .git "$GIT_URL")
+REPO_NAME=""
+if [[ -n "$GIT_URL" ]]; then
+  REPO_NAME=$(basename -s .git "$GIT_URL")
+fi
 
-# 1. Voraussetzungen installieren
-echo "🔧 Installing dependencies (podman, distrobox)..."
+# Vorbereitungen...
 sudo apt update
 sudo apt install -y podman curl git
 
-# 2. distrobox installieren
 if ! command -v distrobox &>/dev/null; then
   curl -s https://raw.githubusercontent.com/89luca89/distrobox/main/install | sudo bash
 fi
 
-# 3. Container erstellen
 IMAGE="ubuntu:22.04"
-
 if distrobox list | awk '{print $1}' | grep -qx "$CONTAINER_NAME"; then
   echo "⚠️  Container '$CONTAINER_NAME' already exists. Aborting."
   exit 1
@@ -38,61 +45,77 @@ else
   distrobox create --name "$CONTAINER_NAME" --image "$IMAGE" --yes
 fi
 
-# 4. Setup-Skript für Container schreiben
-cat << EOF > setup_inside_container.sh
+# Setup-Skript erzeugen
+cat << 'EOF' > setup_inside_container.sh
 #!/bin/bash
 set -e
 
-echo "📁 Ensuring project folder exists..."
-mkdir -p "\$HOME/\$TARGET_FOLDER_REL"
-cd "\$HOME/\$TARGET_FOLDER_REL"
+echo "📁 Creating project folder..."
+mkdir -p "$HOME/$TARGET_FOLDER_REL"
+cd "$HOME/$TARGET_FOLDER_REL"
 
-echo "🌐 [1/6] Updating package index..."
+echo "🌐 [1/5] Updating package index..."
 sudo apt update -y
 
-echo "📦 [2/6] Installing base packages (curl, git, gnupg)..."
-sudo apt install -y curl git gnupg
+echo "📦 [2/5] Installing common tools..."
+sudo apt install -y curl git gnupg software-properties-common
 
-echo "🟢 [3/6] Setting up Node.js repository..."
-curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+case "$ENVIRONMENT_CHOICE" in
+  1)
+    echo "🟢 Installing Node.js..."
+    curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+    sudo apt install -y nodejs
+    ;;
+  2)
+    echo "🟠 Installing PHP..."
+    sudo apt install -y php php-cli php-mbstring php-xml unzip
+    ;;
+  3)
+    echo "🔵 Installing .NET SDK..."
+    wget https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
+    sudo dpkg -i packages-microsoft-prod.deb
+    rm packages-microsoft-prod.deb
+    sudo apt update -y
+    sudo apt install -y dotnet-sdk-6.0
+    ;;
+  *)
+    echo "❌ Invalid environment choice."
+    exit 1
+    ;;
+esac
 
-echo "⬇️ [4/6] Installing Node.js LTS..."
-sudo apt install -y nodejs
+if [[ -n "$GIT_URL" ]]; then
+  echo "📁 Cloning Git repository..."
+  git clone "https://${GITHUB_PAT}@${GIT_URL#https://}" "$HOME/$TARGET_FOLDER_REL/$REPO_NAME"
+  cd "$HOME/$TARGET_FOLDER_REL/$REPO_NAME"
+  echo "🔒 Resetting git remote to remove PAT from config..."
+  git remote set-url origin "$GIT_URL"
+fi
 
-echo "📁 [5/6] Cloning project..."
-git clone https://\${GITHUB_PAT}@${GIT_URL#https://} "\$HOME/\$TARGET_FOLDER_REL/$REPO_NAME"
-
-echo "📂 [6/6] Entering project directory..."
-cd "\$HOME/\$TARGET_FOLDER_REL/$REPO_NAME"
-
-echo "🔒 Resetting git remote to remove PAT from config..."
-git remote set-url origin "$GIT_URL"
-
-echo "✅ Project is ready in ~/$(basename "$TARGET_FOLDER_REL")/$REPO_NAME"
+echo "✅ Setup complete."
 EOF
 
 chmod +x setup_inside_container.sh
 
-# 5. Script im Container ausführen
-echo "🚀 Running setup inside container..."
-distrobox enter "$CONTAINER_NAME" -- env GITHUB_PAT="$GITHUB_TOKEN" GIT_URL="$GIT_URL" TARGET_FOLDER="$TARGET_FOLDER" ./setup_inside_container.sh
+# Skript im Container ausführen
+distrobox enter "$CONTAINER_NAME" -- env \
+  GITHUB_PAT="$GITHUB_TOKEN" \
+  GIT_URL="$GIT_URL" \
+  TARGET_FOLDER_REL="$TARGET_FOLDER_REL" \
+  ENVIRONMENT_CHOICE="$ENVIRONMENT_CHOICE" \
+  ./setup_inside_container.sh
 
-# 6. Aufräumen
-rm -f setup_inside_container.sh || true
+rm setup_inside_container.sh
 
-echo "✅ Entwicklungsumgebung ist fertig!"
+echo "✅ Entwicklungsumgebung ist fertig."
 
-# 7. Alias eintragen
-ALIAS_CMD="alias enter_$CONTAINER_NAME='distrobox enter $CONTAINER_NAME --additional-flags \"--env DISTROBOX_NAME=$CONTAINER_NAME\"'"
-
+# Alias hinzufügen
+ALIAS_CMD="alias enter_$CONTAINER_NAME='distrobox enter $CONTAINER_NAME'"
 if ! grep -Fxq "$ALIAS_CMD" ~/.bashrc; then
   echo "$ALIAS_CMD" >> ~/.bashrc
-  echo "✅ Alias 'enter_$CONTAINER_NAME' wurde zu ~/.bashrc hinzugefügt."
-else
-  echo "ℹ️ Alias 'enter_$CONTAINER_NAME' existiert bereits in ~/.bashrc."
+  echo "✅ Alias 'enter_$CONTAINER_NAME' added to ~/.bashrc"
 fi
+
 source ~/.bashrc
 
-echo "👉 Mit folgendem Befehl betrittst du den Container:"
-echo "   enter_$CONTAINER_NAME"
-
+echo "👉 Use 'enter_$CONTAINER_NAME' to access your container."
