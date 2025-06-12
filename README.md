@@ -1,41 +1,95 @@
-# 🚀 distrobox-nodejs-dev-bootstrap
+# 📦 Distrobox Node.js Dev Bootstrap
 
-Automatisiere die Einrichtung einer isolierten Entwicklungsumgebung mit [distrobox](https://github.com/89luca89/distrobox), [podman](https://podman.io/) und deinem Git-Projekt. Ideal für Linux-Setups, schnelle Projektstarts oder portable Umgebungen.
+Ein automatisiertes Setup-Skript, das eine vollständige Node.js-Entwicklungsumgebung in einem isolierten [Distrobox](https://github.com/89luca89/distrobox)-Container auf Basis von `ubuntu:22.04` einrichtet.
 
-## 🔧 Features
+---
 
-- Automatische Installation von `podman`, `distrobox`, `nodejs`
-- Git-Projekt via Personal Access Token (PAT) klonen
-- Isolierte Containerumgebung auf Basis von `ubuntu:22.04`
-- Alias zum späteren Betreten des Containers
-- Sicheres Handling des PAT (nicht im Git gespeichert)
+## ✨ Features
 
-## 🛠️ Anforderungen
+- 🐧 Erstellt automatisch eine isolierte Entwicklungsumgebung mit `distrobox`
+- 🔐 Klont ein privates GitHub-Repository mit deinem persönlichen Zugriffstoken (PAT)
+- 🚀 Installiert Node.js (LTS), Git, curl, gnupg u.v.m.
+- ⚙️ Fügt automatisch einen Alias zum einfachen Container-Zugriff hinzu
+- 🧼 Bereinigt temporäre Dateien nach dem Setup
 
-- Linux
-- Bash
-- sudo-Rechte für Paketinstallation
-- GitHub Personal Access Token (PAT)
+---
 
-## 🚀 Installation & Nutzung
+## ⚙️ Voraussetzungen
 
-```bash
-git clone https://github.com/YOUR_USERNAME/distrobox-dev-bootstrap.git
-cd distrobox-dev-bootstrap
-chmod +x bootstrap.sh
-./bootstrap.sh
-```
+- Betriebssystem: Linux mit `bash`
+- Paketmanager: `apt` (z.B. Ubuntu, Debian)
+- [Podman](https://podman.io/) (wird automatisch installiert)
+- Optional: GitHub PAT (Personal Access Token) mit **Repo-Zugriff**
 
-Danach kannst du jederzeit mit folgendem Alias in deinen Container einsteigen:
+---
+
+## 🚀 Schnellstart
 
 ```bash
-enter_DEINCONTAINERNAME
+curl -s https://raw.githubusercontent.com/madcoda9000/distrobox-nodejs-dev-bootstrap/main/bootstrap.sh | bash
 ```
 
-## 🔐 Sicherheitshinweis
+> 💡 Alternativ kannst du das Skript manuell herunterladen und ausführen:
+>
+> ```bash
+> git clone https://github.com/madcoda9000/distrobox-nodejs-dev-bootstrap.git
+> cd distrobox-nodejs-dev-bootstrap
+> chmod +x bootstrap.sh
+> ./bootstrap.sh
+> ```
 
-Das GitHub-PAT wird nur temporär für den `git clone` verwendet und **sofort wieder entfernt**. Es wird **nicht gespeichert**.
+---
 
-## 📄 Lizenz
+## 🖥️ Was passiert im Skript?
 
-MIT License – siehe [LICENSE](./LICENSE)
+1. 🔧 Installiert `podman`, `git`, `curl` (falls noch nicht vorhanden)
+2. 🐳 Installiert `distrobox`, falls nicht vorhanden
+3. 📦 Erstellt einen Container auf Basis von `ubuntu:22.04`
+4. 📂 Klont dein GitHub-Projekt (öffentlich oder privat mit PAT)
+5. 🟢 Installiert Node.js LTS und Tools im Container
+6. 🔗 Legt einen praktischen Alias an, z. B.:
+
+```bash
+alias enter_meinprojekt='distrobox enter meinprojekt --additional-flags "--env DISTROBOX_NAME=meinprojekt"'
+```
+
+---
+
+## 🛠 Beispiel
+
+```bash
+🔐 Enter your GitHub PAT: •••••••••
+📦 Enter a name for your container: meinprojekt
+🌐 Please enter Git project URL: https://github.com/username/my-app.git
+📁 Relative path (inside your home) to clone project: Projekte/WebApps
+```
+
+Danach kannst du einfach mit folgendem Befehl in deine Umgebung einsteigen:
+
+```bash
+enter_meinprojekt
+```
+
+---
+
+## 📁 Struktur im Home-Verzeichnis
+
+Nach dem Setup befindet sich dein Projekt unter:
+
+```
+~/Projekte/WebApps/my-app
+```
+
+---
+
+## 🧯 Container entfernen (optional)
+
+```bash
+distrobox rm meinprojekt
+```
+
+---
+
+## 📜 Lizenz
+
+MIT License – © [madcoda9000](https://github.com/madcoda9000)
