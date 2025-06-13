@@ -42,7 +42,7 @@ if distrobox list | awk '{print $1}' | grep -qx "$CONTAINER_NAME"; then
   exit 1
 else
   echo "📦 Creating distrobox container '$CONTAINER_NAME'..."
-  distrobox create --name "$CONTAINER_NAME" --image "$IMAGE" --yes
+  distrobox create --name "$CONTAINER_NAME" --hostname "$CONTAINER_NAME" --image "$IMAGE" --yes
 fi
 
 # Setup-Skript erzeugen
